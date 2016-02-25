@@ -6,7 +6,7 @@ from sklearn import cross_validation
 # Metrics
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import auc_score
+from sklearn.metrics import roc_auc_score
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import fbeta_score
@@ -16,6 +16,7 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import zero_one_loss
 
+from copper.transform import ml_inputs, ml_target
 
 class ModelComparison(dict):
     """ Utility for easy model(algorithm) comparison.
@@ -58,16 +59,16 @@ class ModelComparison(dict):
 
     def set_train(self, dataset):
         assert type(dataset) is copper.Dataset, "Should be a copper.Dataset"
-        self.X_train = copper.t.ml_inputs(dataset)
-        self.le, self.y_train = copper.t.ml_target(dataset)
+        self.X_train = ml_inputs(dataset)
+        self.le, self.y_train = ml_target(dataset)
 
     def get_test(self):
         return self.X_test, self.y_test
 
     def set_test(self, dataset):
         assert type(dataset) is copper.Dataset, "Should be a copper.Dataset"
-        self.X_test = copper.t.ml_inputs(dataset)
-        _, self.y_test = copper.t.ml_target(dataset)
+        self.X_test = ml_inputs(dataset)
+        _, self.y_test = ml_target(dataset)
 
     train = property(get_train, set_train, None)
     test = property(get_test, set_test, None)
@@ -85,8 +86,8 @@ class ModelComparison(dict):
             between 0 and 1.
         """
         assert type(dataset) is copper.Dataset, "Should be a copper.Dataset"
-        inputs = copper.t.ml_inputs(dataset)
-        self.le, target = copper.t.ml_target(dataset)
+        inputs = ml_inputs(dataset)
+        self.le, target = ml_target(dataset)
         self.X_train, self.X_test, self.y_train, self.y_test = \
             cross_validation.train_test_split(inputs, target, **args)
 
@@ -111,8 +112,8 @@ class ModelComparison(dict):
             X_test = self.X_test
             y_test = self.y_test
         elif isinstance(X_test, copper.Dataset):
-            X_test = copper.transforms.ml_inputs(X_test)
-            _, y_test = copper.transforms.ml_target(X_test)
+            X_test = ml_inputs(X_test)
+            _, y_test = ml_target(X_test)
         assert X_test is not None, 'Nothing to predict'
         return X_test, y_test
 
@@ -174,7 +175,7 @@ class ModelComparison(dict):
         return self.metric(accuracy_score, name='Accuracy', **args)
 
     def auc_score(self, **args):
-        return self.metric(auc_score, name='AUC', **args)
+        return self.metric(roc_auc_score, name='AUC', **args)
 
     def average_precision_score(self, **args):
         return self.metric(average_precision_score, name='Avg Precision', **args)
